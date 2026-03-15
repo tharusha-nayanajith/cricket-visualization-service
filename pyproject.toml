@@ -8,13 +8,3 @@ dependencies = [
     "fastapi>=0.135.1",
     "uvicorn>=0.41.0",
 ]
-- name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/python@master
-        continue-on-error: true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: test
-          # The --file flag tells Snyk exactly where the dependencies are
-          # The --skip-unresolved avoids the virtualenv "broken" error
-          args: --file=pyproject.toml --skip-unresolved=true
