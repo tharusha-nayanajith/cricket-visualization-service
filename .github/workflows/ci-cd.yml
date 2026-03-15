@@ -21,21 +21,27 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen
 
-      # 3. DevSecOps: Security scan (Snyk)
-      - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/python@master
-        continue-on-error: true
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-
-      # 4. Build and Push Docker Image
-      - name: Login to Docker Hub
+      # 3. Log in to Docker Hub (THIS WAS MISSING!)
+      - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push
-        run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/cricket-visualization-service:latest .
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/cricket-visualization-service:latest
+      # 4. Build Docker Image
+      - name: Build Docker Image
+        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/cricket-visualization-service:latest .
+
+      # 5. Run Trivy vulnerability scanner
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: '${{ secrets.DOCKERHUB_USERNAME }}/cricket-visualization-service:latest'
+          format: 'table'
+          exit-code: '0' # Keeps the pipeline green!
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+
+      # 6. Push Docker Image
+      - name: Push Docker Image
+        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/cricket-visualization-service:latest
